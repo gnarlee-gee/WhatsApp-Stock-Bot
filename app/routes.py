@@ -1,5 +1,5 @@
 from flask import request
-from app import app, _update_db
+from app import app, _update_db, _delete_record
 from app.models import User
 from twilio.twiml.messaging_response import MessagingResponse
 
@@ -20,6 +20,7 @@ def bot():
     if remote_number.startswith("whatsapp:"):
         remote_number = remote_number.split(":")[1]
 
+    #TODO: CREATE A RANDOM NUMBER TO ASSIGN!
     if not remote_number:
         remote_number = "123"
 
@@ -28,30 +29,28 @@ def bot():
     # Help commands
     # - 'help'
     if incoming_msg == "help":
-        output_lines.append("'create account' - create a new account")
-        output_lines.append("'create flashcards' - start creating flashcards")
-        output_lines.append("'stop creating flashcards' - stop creating flashcards")
-        output_lines.append("'start reviewing' - start reviewing flashcards")
-        output_lines.append("'stop reviewing' - stop reviewing flashcards")
+        output_lines.append("'create' - create a new account")
+        output_lines.append("'add ticker1 ticker2 ... tickerN' - adds any amount of tickers to your account")
+        output_lines.append("'remove ticker1 ticker2 ... tickerN' - removes selected tickers from account")
+        output_lines.append("'show' - displays market prices of stocks in your portfolio")
+        output_lines.append("'delete account' - deletes account")
+        output_lines.append("***DO NOT INCLUDE ' ' in your commands!***")
         return _send_message(output_lines)
 
     # User creation commands
     # - 'create account'
     if not user:
-        if incoming_msg == "create account":
+        if incoming_msg == "create":
             new_user = User(remote_number)
             _update_db(new_user)
             output_lines.append(
                 f"Account successfully created for number {remote_number}!"
             )
             output_lines.append(
-                "To get started, text 'create flashcards' to start creating flashcards."
+                "To get started, text 'add ticker1 ticker2 ... tickerN' to start creating your portfolio."
             )
             output_lines.append(
-                "When you're finished, text 'stop creating flashcards'."
-            )
-            output_lines.append(
-                "You can text 'start reviewing' to review the flashcards you've created."
+                "You can text 'show' to see market prices of stocks in your portfolio."
             )
             output_lines.append(
                 "Text 'help' at any time to see available commands."
@@ -61,27 +60,28 @@ def bot():
 
         return _send_message(output_lines)
     else:
-        if incoming_msg == "create account":
-            output_lines.append(f"You have already registered {remote_number}. Send 'help' for available options.")
+        if incoming_msg == "create":
+            output_lines.append(f"You have already registered {remote_number}. Begin typing some commands!\nType 'help' for commands!.")
             return _send_message(output_lines)
 
-    # Flashcard commands
-    # - 'create flashcards'
-    #   - '{front} / {back}'
-    #   - 'stop creating flashcards'
-    # - 'start reviewing'
-    #   - '{answer}'
-    #   - 'stop reviewing'
-
-    if not user.creating_flashcards and incoming_msg == "create flashcards":
+    if incoming_msg == "delete":
+        _delete_record(user)
         output_lines.append(
-            "Create a new flashcard by texting in the form {front} / {back}."
-        )
-        output_lines.append(
-            "For example 'hello / 你好' would create 'hello' on the front and '你好' on the back."
-        )
-        _update_db(user)
+                f"Account successfully deleted for number {remote_number}!"
+            )
         return _send_message(output_lines)
+    
+    
+    
+    # if not user.creating_flashcards and incoming_msg == "create flashcards":
+    #     output_lines.append(
+    #         "Create a new flashcard by texting in the form {front} / {back}."
+    #     )
+    #     output_lines.append(
+    #         "For example 'hello / 你好' would create 'hello' on the front and '你好' on the back."
+    #     )
+    #     _update_db(user)
+    #     return _send_message(output_lines)
 
 
     output_lines.append("Sorry, I don't understand, please try again or text 'help'.")

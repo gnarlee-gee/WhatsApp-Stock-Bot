@@ -14,5 +14,8 @@ def _update_db(obj):
     db.session.commit()
     return obj
 
+def _delete_record(obj):
+    db.session.delete(obj)
+    db.session.commit()
 
 from app import routes, models
