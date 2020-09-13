@@ -1,4 +1,3 @@
-from app import routes, models
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -11,7 +10,9 @@ migrate = Migrate(app, db)
 
 
 def _update_db(obj):
-    ''' Updates database when user makes changes '''
     db.session.add(obj)
     db.session.commit()
     return obj
+
+
+from app import routes, models
