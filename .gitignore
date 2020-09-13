@@ -3,3 +3,11 @@ twilioproj/
 
 # ngrok
 ngrok
+
+# Environment variables
+.env
+
+
+# Playground type stuff
+send_sms.py
+app.py
