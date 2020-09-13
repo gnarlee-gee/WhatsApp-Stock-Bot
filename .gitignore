@@ -11,3 +11,9 @@ ngrok
 # Playground type stuff
 send_sms.py
 app.py
+
+# cache
+__pycache__/
+
+# sql migrations
+migrations/
