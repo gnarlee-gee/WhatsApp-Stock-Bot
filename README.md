@@ -1,4 +1,4 @@
-# Twilio-Sms-App
+# WhatsApp-Stockbot
 Sms chatbot for retrieving stock prices
 
 
