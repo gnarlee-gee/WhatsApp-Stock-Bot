@@ -1,4 +1,4 @@
-# WhatsApp-Stockbot
+# WhatsApp-Stock-Bot
 Sms chatbot for retrieving stock prices
 
 
