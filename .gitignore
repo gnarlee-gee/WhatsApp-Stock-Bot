@@ -16,5 +16,6 @@ app.py
 __pycache__/
 app/__pycache__/
 
-# sql migrations
-migrations/
+ngrok
+
+site.db

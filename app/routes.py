@@ -8,8 +8,7 @@ import random
 import os
 
 # Use these to show if price is up or down -> 🟩🟥
-# TODO: Make 'delete' also delete tickers, currently does not
-
+# TODO: Format 'show' command *TICKER*: Price
 
 # The bot's response
 def _send_message(output_lines):
@@ -37,10 +36,14 @@ def bot():
         remote_number = str(random.randrange(1000000))
 
 
-
+    user = User.query.get(remote_number)
     # our commands
     # returns a list of commands to bot's response (_send_message())
     if incoming_msg == "help" or incoming_msg.lower() == "hi":
+        if not user:
+            output_lines.append("Greetings stranger! Please create an account.")
+        else:
+            output_lines.append(f"Greetings *{user.phone_number}*! Here are my commands.")
         output_lines.append("'create account' - new users must create a new account")
         output_lines.append("'add ticker1 ticker2 ... tickerN' - adds any amount of tickers to your account")
         output_lines.append("\t*example: add TSLA AAPL NVDA*")
@@ -50,7 +53,7 @@ def bot():
         output_lines.append("'delete account' - deletes your account")
         return _send_message(output_lines)
     
-    user = User.query.get(remote_number)
+    
     # creates account with primary key = phone number
     # if no user is found in the query we create a new one
     if not user:
@@ -58,7 +61,7 @@ def bot():
             new_user = User(remote_number)
             _update_db(new_user)
             output_lines.append(
-                f"Account successfully created for number {remote_number}!"
+                f"Account successfully created for number *{remote_number}*!"
                 )
             output_lines.append(
                 "Text 'help' at any time to see available commands."
@@ -69,7 +72,7 @@ def bot():
     else: # if there is a user already in db and they typed create, go here to let them know they can begin
         if incoming_msg == "create account":
             output_lines.append(
-                f"You have already registered {remote_number}. Begin typing some commands!\nType 'help' for commands!."
+                f"You have already registered *{remote_number}*. Begin typing some commands!\nType 'help' for commands!."
                 )
             return _send_message(output_lines) # send the response
 
@@ -88,11 +91,16 @@ def bot():
             ticker = ticker.upper()
             # Checks if the stock input is already in our db to avoid duplicates
             if not bool(Ticker.query.filter_by(tickers=ticker).first()):
-                add_stock = Ticker(user.phone_number, ticker)
-                _update_db(add_stock)
-                output_lines.append(
-                    f"*{ticker}* stored successfully."
-                    )
+                stockObj = Stock(ticker, token=os.getenv('IEX_TOKEN'))
+                try:
+                    stockObj.get_quote()['latestPrice']
+                    add_stock = Ticker(user.phone_number, ticker)
+                    _update_db(add_stock)
+                    output_lines.append(
+                        f"*{ticker}* stored successfully."
+                        )
+                except: 
+                    output_lines.append(f'An error occured trying to add *{ticker.upper()}*.\nPerhaps a typo!')
             else:
                 output_lines.append(
                     f"*{ticker}* previously stored."
@@ -106,11 +114,12 @@ def bot():
         for ticker in stocks[1:]:
             ticker = ticker.upper()
             # Checks if ticker exists in db before deleting
-            if bool(Ticker.query.filter_by(tickers=ticker).one()):
-                obj = Ticker.query.filter_by(tickers=ticker).one()
-                _delete_record(obj, None)
-                output_lines.append(f"*{ticker.upper()}* successfully removed.")
-            else:
+            try:
+                if bool(Ticker.query.filter_by(tickers=ticker).one()):
+                    obj = Ticker.query.filter_by(tickers=ticker).one()
+                    _delete_record(obj, None)
+                    output_lines.append(f"*{ticker.upper()}* successfully removed.")
+            except:
                 output_lines.append(f"*{ticker.upper()}* not found in profile.")
         return _send_message(output_lines)
     
@@ -125,9 +134,20 @@ def bot():
         # # stockObj is a Stock obj which obtained a list as a parameter
         # # So to access the particular index we must access via JSON-like key/value
         # # stockObj.get_quote()['TSLA']['latestPrice'] for example
-        for ticker in all_tickers:
-            output_lines.append('*' + ticker.upper() + '*' + ' ' + str(stockObj.get_quote()[ticker.upper()]['latestPrice']))
-            
+        if len(all_tickers) > 1:
+            for ticker in all_tickers:
+                ticker = str(ticker)
+                try:
+                    output_lines.append(str(stockObj.get_quote()[ticker.upper()]['latestPrice']))
+                except:
+                    output_lines.append(f'An error occured for ticker: *{ticker.upper()}*.\nPerhaps a typo!')
+        else:
+            ticker = str(all_tickers[0])
+            stockObj = Stock(ticker, token=os.getenv('IEX_TOKEN'))
+            try:
+                output_lines.append('*' + ticker.upper() + "*: " + str(stockObj.get_quote()['latestPrice']))
+            except:
+                output_lines.append(f'An error occured for ticker: *{ticker.upper()}*.\nPerhaps a typo!')
         return _send_message(output_lines)
 
     output_lines.append(f"Sorry, I didn't understand the command '{incoming_msg}', please try again or text 'help'.")

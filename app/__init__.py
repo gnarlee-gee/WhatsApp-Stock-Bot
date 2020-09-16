@@ -2,13 +2,16 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from config import Config
+import os 
 
 #TODO: Comments
+MIGRATION_DIR = os.path.join('app', 'migrations')
 
 app = Flask(__name__)
 app.config.from_object(Config)
 db = SQLAlchemy(app)
-migrate = Migrate(app, db)
+db.create_all()
+migrate = Migrate(app, db, directory=MIGRATION_DIR)
 
 # Will add records to our database when function is called
 def _update_db(obj):
