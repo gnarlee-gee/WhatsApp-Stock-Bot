@@ -25,7 +25,7 @@ def bot():
     ''' handles incoming messages, gets and creates remote_number (our general id), and initializes 
     response list'''
     incoming_msg = request.values.get("Body", "").strip().lower()
-    remote_number = request.values.get("From", "")
+    remote_number = request.values.get("From", "").lower()
     output_lines = []
     # incoming From is "whatsapp:phone number/acct id"
     if remote_number.startswith("whatsapp:"):

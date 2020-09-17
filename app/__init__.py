@@ -9,9 +9,9 @@ MIGRATION_DIR = os.path.join('app', 'migrations')
 
 app = Flask(__name__)
 app.config.from_object(Config)
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
 db = SQLAlchemy(app)
-db.create_all()
-migrate = Migrate(app, db, directory=MIGRATION_DIR)
+migrate = Migrate(app, db, MIGRATION_DIR)
 
 # Will add records to our database when function is called
 def _update_db(obj):
