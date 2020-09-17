@@ -138,7 +138,7 @@ def bot():
             for ticker in all_tickers:
                 ticker = str(ticker)
                 try:
-                    output_lines.append(str(stockObj.get_quote()[ticker.upper()]['latestPrice']))
+                    output_lines.append('*' + ticker.upper() + "*: " + str(stockObj.get_quote()[ticker.upper()]['latestPrice']))
                 except:
                     output_lines.append(f'An error occured for ticker: *{ticker.upper()}*.\nPerhaps a typo!')
         else:
